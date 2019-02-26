@@ -89,9 +89,9 @@ class AsyncGenerator(AsyncIterator[T], Generic[T, U]):
     def __aiter__(self) -> 'AsyncGenerator[T, U]': pass
 
 @runtime
-class Awaitable(Protocol[T]):
+class Awaitable(Protocol[T_co]):
     @abstractmethod
-    def __await__(self) -> Generator[Any, Any, T]: pass
+    def __await__(self) -> Generator[Any, Any, T_co]: pass
 
 class AwaitableGenerator(Generator[T, U, V], Awaitable[V], Generic[T, U, V, S], metaclass=ABCMeta):
     pass
@@ -107,15 +107,15 @@ class Coroutine(Awaitable[V], Generic[T, U, V]):
     def close(self) -> None: pass
 
 @runtime
-class AsyncIterable(Protocol[T]):
+class AsyncIterable(Protocol[T_co]):
     @abstractmethod
-    def __aiter__(self) -> 'AsyncIterator[T]': pass
+    def __aiter__(self) -> 'AsyncIterator[T_co]': pass
 
 @runtime
-class AsyncIterator(AsyncIterable[T], Protocol):
-    def __aiter__(self) -> 'AsyncIterator[T]': return self
+class AsyncIterator(AsyncIterable[T_co], Protocol):
+    def __aiter__(self) -> 'AsyncIterator[T_co]': return self
     @abstractmethod
-    def __anext__(self) -> Awaitable[T]: pass
+    def __anext__(self) -> Awaitable[T_co]: pass
 
 class Sequence(Iterable[T_co], Container[T_co]):
     @abstractmethod
