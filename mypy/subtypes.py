@@ -39,9 +39,9 @@ TypeParameterChecker = Callable[[Type, Type, int], bool]
 
 
 def check_type_parameter(lefta: Type, righta: Type, variance: int) -> bool:
-    if variance == COVARIANT:
+    if variance == COVARIANT or isinstance(lefta, UninhabitedType):
         return is_subtype(lefta, righta)
-    elif variance == CONTRAVARIANT:
+    elif variance == CONTRAVARIANT or isinstance(righta, UninhabitedType):
         return is_subtype(righta, lefta)
     else:
         return is_equivalent(lefta, righta)
