@@ -541,7 +541,11 @@ class NewSemanticAnalyzer(NodeVisitor[None],
                 # Signature must be analyzed in the surrounding scope so that
                 # class-level imported names and type variables are in scope.
                 analyzer = self.type_analyzer()
-                defn.type = analyzer.visit_callable_type(defn.type, nested=False)
+                tag = self.track_incomplete_refs()
+                result = analyzer.visit_callable_type(defn.type, nested=False)
+                if self.found_incomplete_ref(tag):
+                    return
+                defn.type = result
                 self.add_type_alias_deps(analyzer.aliases_used)
                 self.check_function_signature(defn)
                 if isinstance(defn, FuncDef):
@@ -4180,13 +4184,17 @@ class NewSemanticAnalyzer(NodeVisitor[None],
             # Therefore its line number is always 1, which is not useful for this
             # error message.
             extra_msg = ' (by an import)'
-        elif node and node.line != -1 and self.cur_mod_id in split_module_names(node.fullname()):
+        elif node and node.line != -1 and self.is_local_name(node.fullname()):
             # TODO: Using previous symbol node may give wrong line. We should use
             #       the line number where the binding was established instead.
             extra_msg = ' on line {}'.format(node.line)
         else:
             extra_msg = ' (possibly by an import)'
         self.fail("Name '{}' already defined{}".format(unmangle(name), extra_msg), ctx)
+
+    def is_local_name(self, name: str) -> bool:
+        """Does name look like reference to a definition in the current module?"""
+        return self.cur_mod_id in split_module_names(name) or '.' not in name
 
     def fail(self, msg: str, ctx: Context, serious: bool = False, *,
              blocker: bool = False) -> None:
